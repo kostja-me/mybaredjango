@@ -1,0 +1,26 @@
+build_settings:
+  build_image: python-3.13
+  build_command: "pip install -r requirements.txt && python djangotutorial/manage.py collectstatic --noinput"
+  container_port: 8000
+  environment_variables:
+    - name: DATABASE_URL
+      from_database:
+        name: db
+        property: connection_url
+    - name: ALLOWED_HOSTS
+      from_domains: true
+    - name: SECRET_KEY
+      source: manual
+    - name: DEBUG
+      value: "False"
+
+services:
+  web:
+    command: "gunicorn --chdir djangotutorial mysite.wsgi:application --bind 0.0.0.0:8000"
+    scale: 1
+  release:
+    command: "python djangotutorial/manage.py migrate"
+
+databases:
+  db:
+    type: postgresql_17
